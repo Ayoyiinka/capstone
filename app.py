@@ -1,56 +1,43 @@
-import logging
-import os
-from flask import Flask, request, jsonify, Response
-from flask_sqlalchemy import SQLAlchemy
+#!/usr/local/bin/python3
+from flask import Flask
 from flask.logging import create_logger
-from sqlalchemy import text
-from sqlalchemy.exc import ResourceClosedError
-
+import logging
 
 app = Flask(__name__)
 LOG = create_logger(app)
 LOG.setLevel(logging.INFO)
 
-db_user = os.environ.get('POSTGRES_DB_USER') or 'postgres'
-db_psw =  os.environ.get('POSTGRES_DB_PSW') or 'mysecretpassword'
-db_host = os.environ.get('SERVICE_POSTGRES_SERVICE_HOST') or 'localhost:5432'
+app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://{0}:{1}@{2}'.format(
-    db_user, db_psw, db_host
-)
-db = SQLAlchemy(app)
-
-@app.route('/')
-def index():
-    """Empty homepage"""
-    return Response(status=200)
-
-@app.route("/query", methods=['POST'])
-def query():
-    """
-    Run a query in the db.
-    Note that we commit any transaction.
-    """
-
-    # Logging the input payload
-    json_payload = request.json
-    db_query = json_payload['query']
-    LOG.info("Query: \n%s" % json_payload)
-
-    sql = text(db_query)
-    result = db.engine.execute(sql)
-
-    try:
-        json_result = [dict(row) for row in result]
-    except ResourceClosedError:
-        json_result = 'OK'
-
-    LOG.info("Results: \n%s" % result)
-
-    db.session.commit()
-
-    return jsonify({'result': json_result})
-
+@app.route("/")
+@app.route('/home')
+def home():
+    user = {'username': 'Ayoyinka'}
+    posts = [
+        {
+            'author': {'username': 'UdacityTutor'},
+            'body': 'Beautiful day in Portland!'
+        },
+        {
+            'author': {'username': 'UdacityStudent'},
+            'body': 'The Avengers movie was so cool!'
+        }
+    ]
+    return """<html>
+    <head>
+        {% if title %}
+        <title>{{ title }} - Microblog</title>
+        {% else %}
+        <title>Welcome to Microblog</title>
+        {% endif %}
+    </head>
+    <body>
+        <h1>Hi, {{ user.username }}!</h1>
+        {% for post in posts %}
+        <div><p>{{ post.author.username }} says: <b>{{ post.body }}</b></p></div>
+        {% endfor %}
+    </body>
+</html>"""
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=os.environ.get('PORT'), debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True) # specify port=80
