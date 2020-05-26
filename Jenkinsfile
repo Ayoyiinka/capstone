@@ -22,11 +22,6 @@ pipeline {
     stage('Building image') {
       steps {
         	  sh 'echo "Building Docker image..."'
-      withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'dockerHubPassword', usernameVariable: 'dockerHubUser')]) {
-	     	sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword}"
-	     	sh "docker build -t 164678/udacity-capstone-project ."
-	     	sh "docker tag 164678/udacity-capstone-project 164678/udacity-capstone-project"
-	     	sh "docker push 164678/udacity-capstone-project"
         }
       }
     }
