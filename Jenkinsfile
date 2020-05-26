@@ -17,7 +17,6 @@ pipeline {
     stage("Linting") {
       steps {
             sh 'echo "Linting..."'
-            sh '/home/ubuntu/.local/bin/hadolint Dockerfile'
       }
     }
     stage('Building image') {
