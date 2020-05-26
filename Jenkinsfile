@@ -2,21 +2,20 @@ pipeline {
     agent any
     stages {
     stage('Checking out git repo') {
-      echo 'Checkout...'
+      sh 'echo "Checkout..."'
       checkout scm
     }
     stage('Checking environment') {
-      echo 'Checking environment...'
+      sh 'echo "Checking environment..."'
       sh 'git --version'
-      echo "Branch: ${env.BRANCH_NAME}"
       sh 'docker -v'
     }
     stage("Linting") {
-      echo 'Linting...'
+      sh 'echo "Linting..."'
       sh '/home/ubuntu/.local/bin/hadolint Dockerfile'
     }
     stage('Building image') {
-	    echo 'Building Docker image...'
+	    sh 'echo "Building Docker image..."'
       withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'dockerHubPassword', usernameVariable: 'dockerHubUser')]) {
 	     	sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword}"
 	     	sh "docker build -t 164678/udacity-capstone-project ."
@@ -25,7 +24,7 @@ pipeline {
       }
     }
     stage('Deploying') {
-      echo 'Deploying to AWS...'
+      sh 'echo "Deploying to AWS..."'
       dir ('./') {
         withAWS(credentials: 'aws-credentials', region: 'eu-central-1') {
             sh "aws eks --region eu-central-1 update-kubeconfig --name CapstoneEKS-VUUZkwHTDVPa"
@@ -39,7 +38,7 @@ pipeline {
       }
     }
     stage("Cleaning up") {
-      echo 'Cleaning up...'
+      sh 'echo "Cleaning up..."'
       sh "docker system prune"
       }
     }
