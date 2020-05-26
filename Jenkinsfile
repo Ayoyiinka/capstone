@@ -2,29 +2,38 @@ pipeline {
     agent any
     stages {
     stage('Checking out git repo') {
-      sh 'echo "Checkout..."'
-      checkout scm
+      steps {
+            sh 'echo "Checkout..."'
+            checkout scm
+      }
     }
     stage('Checking environment') {
-      sh 'echo "Checking environment..."'
-      sh 'git --version'
-      sh 'docker -v'
+      steps {
+            sh 'echo "Checking environment..."'
+            sh 'git --version'
+            sh 'docker -v' 
+      }
     }
     stage("Linting") {
-      sh 'echo "Linting..."'
-      sh '/home/ubuntu/.local/bin/hadolint Dockerfile'
+      steps {
+            sh 'echo "Linting..."'
+            sh '/home/ubuntu/.local/bin/hadolint Dockerfile'
+      }
     }
     stage('Building image') {
-	    sh 'echo "Building Docker image..."'
+      steps {
+        	  sh 'echo "Building Docker image..."'
       withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'dockerHubPassword', usernameVariable: 'dockerHubUser')]) {
 	     	sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword}"
 	     	sh "docker build -t 164678/udacity-capstone-project ."
 	     	sh "docker tag 164678/udacity-capstone-project 164678/udacity-capstone-project"
 	     	sh "docker push 164678/udacity-capstone-project"
+        }
       }
     }
     stage('Deploying') {
-      sh 'echo "Deploying to AWS..."'
+      steps {
+        sh 'echo "Deploying to AWS..."'
       dir ('./') {
         withAWS(credentials: 'aws-credentials', region: 'eu-central-1') {
             sh "aws eks --region eu-central-1 update-kubeconfig --name CapstoneEKS-VUUZkwHTDVPa"
@@ -34,12 +43,14 @@ pipeline {
             sh "kubectl get nodes"
             sh "kubectl get pods"
             sh "aws cloudformation update-stack --stack-name udacity-capstone-nodes --template-body file://aws/worker_nodes.yml --parameters file://aws/worker_nodes_parameters.json --capabilities CAPABILITY_IAM"
+          }
         }
       }
     }
     stage("Cleaning up") {
+      steps {
       sh 'echo "Cleaning up..."'
       sh "docker system prune"
-      }
+        }
     }
 }
